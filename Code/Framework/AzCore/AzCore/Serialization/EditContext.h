@@ -981,7 +981,27 @@ namespace AZ
             AZ_Error("EditContext", !modifyingGlobalEnum, "You cannot add enum values to an enum which is globally reflected");
             if (!modifyingGlobalEnum)
             {
-                m_editElement->m_attributes.push_back(Edit::AttributePair(idCrc, aznew ContainerType(value)));
+                if (idCrc == Edit::Attributes::ChangeValidate)
+                {
+                    if constexpr (AZStd::is_invocable_r_v<AZ::Outcome<void, AZStd::string>, T, void*, Uuid>)
+                    {
+                        using ChangeValidateFunc = AZStd::function<AZ::Outcome<void, AZStd::string>(void*, Uuid)>;
+                        ChangeValidateFunc changeValidateFunc =
+                            [value = AZStd::move(value)](void* address, Uuid typeId) -> AZ::Outcome<void, AZStd::string>
+                        {
+                            return value(address, typeId);
+                        };
+                        m_editElement->m_attributes.push_back(Edit::AttributePair(idCrc, aznew AttributeInvocable(changeValidateFunc)));
+                    }
+                    else
+                    {
+                        AZ_Assert(false, "ChangeValidate attribute can only be used with a function/functor which accepts a (void*, Uuid)");
+                    }
+                }
+                else
+                {
+                    m_editElement->m_attributes.push_back(Edit::AttributePair(idCrc, aznew ContainerType(value)));
+                }
 
                 if (idCrc == AZ::Edit::Attributes::EnumValues)
                 {
