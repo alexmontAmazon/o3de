@@ -412,7 +412,7 @@ namespace AzToolsFramework
     {
         for (auto groupIt = m_sharePriorColumn.begin(); groupIt != m_sharePriorColumn.end(); ++groupIt)
         {
-            AZStd::vector<size_t> currentGroup = *groupIt;
+            auto& currentGroup = *groupIt;
             for (int currentGroupIndex = 0; currentGroupIndex < currentGroup.size(); currentGroupIndex++)
             {
                 if (widgetIndex != currentGroup[currentGroupIndex])
@@ -447,26 +447,10 @@ namespace AzToolsFramework
                     //! Create a new group of all the elements in the group after the element to be removed
                     else if (currentGroupIndex != 0)
                     {
-                        AZStd::vector<size_t> oldGroup;
-                        AZStd::vector<size_t> newGroup;
-                        bool switchGroups = false;
-                        for (int elementIt = 0; elementIt < currentGroup.size(); elementIt++)
-                        {
-                            if (elementIt == currentGroupIndex)
-                            {
-                                switchGroups = true;
-                            }
-                            if (!switchGroups)
-                            {
-                                oldGroup.emplace_back(currentGroup[elementIt]);
-                            }
-                            else
-                            {
-                                newGroup.emplace_back(currentGroup[elementIt]);
-                            }
-                        }
+                        auto removeIter = currentGroup.begin() + currentGroupIndex;
+                        AZStd::vector<size_t> newGroup(removeIter + 1, currentGroup.end());
+                        currentGroup.erase(removeIter, currentGroup.end());
                         m_sharePriorColumn.insert(groupIt + 1, newGroup);
-                        currentGroup.swap(oldGroup);
                         return;
                     }
                 }
